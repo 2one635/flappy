@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+import random
 
 pygame.init()
 
@@ -7,6 +8,9 @@ clock = pygame.time.Clock()
 fps = 60
 flapping = False
 over = False
+pgap = 200
+pfreq = 1500
+last_pipe = pygame.time.get_ticks() - pfreq
 
 width = 864
 height = 936
@@ -43,11 +47,34 @@ class Player(pygame.sprite.Sprite):
                self.vel = -10
           if pygame.mouse.get_pressed()[0] == 0:
                self.clicked = False
+
+
+
+class Pipe(pygame.sprite.Sprite):
+    def __init__(self, x, y, position):
+        pygame.sprite.Sprite.__init__(self)#
+        self.image = pygame.Surface((80, 500))
+        self.image.fill((0, 200, 0))
+        self.rect = self.image.get_rect()
+        if position == 1:
+            self.image = pygame.transform.flip(self.image, False, True)
+            self.rect.bottomleft = [x, y - int(pgap // 2)]
+        if position == -1:
+            self.rect.topleft = [x, y + int(pgap // 2)]   
+
+    def update(self):
+        self.rect.x -= scroll_speed
+        if self.rect.right < 0:
+            self.kill()
+        
+
          
 
 player_group = pygame.sprite.Group()
 Bird = Player(100, int(height / 2))
 player_group.add(Bird)
+
+pipe_group = pygame.sprite.Group()
 
 run = True
 while run:
@@ -55,19 +82,33 @@ while run:
     window.fill((135, 206, 235))
     player_group.update()
     player_group.draw(window)
+    
+    pipe_group.draw(window)
     pygame.draw.rect(window, (34, 139, 34), (0, ground_y, 864, ground_height))
     pygame.display.update()
     
+    if pygame.sprite.groupcollide(player_group, pipe_group, False, False) or Bird.rect.top < 0:
+        over = True
+        
+
     if Bird.rect.bottom >= ground_y:
         Bird.rect.top = ground_y
         Bird.vel = 0
         over = True
         flapping = False
     
-    if Bird.rect.top <= 0:
-     Bird.rect.top = 0
-     over = True
-     flapping = False    
+
+    if over == False and flapping == True:
+            time_now = pygame.time.get_ticks()
+            if time_now - last_pipe > pfreq:
+                pheight = random.randint(-100, 100)
+                b_pipe = Pipe(width, int(height / 2) + pheight, 1)
+                t_pipe = Pipe(width, int(height / 2) + pheight, -1)
+                pipe_group.add(b_pipe)
+                pipe_group.add(t_pipe)
+                last_pipe = time_now
+
+            pipe_group.update()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
