@@ -18,10 +18,20 @@ height = 936
 window = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Flappy Bird")
 
+font = pygame.font.SysFont("Impact", 60)
+
+white = (255, 255, 255)
+
+score = 0
+pipe_pass = False
 scroll_speed = 4
 ground_height = 120
 ground_y = height - ground_height
 
+
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    window.blit(img, (x, y))
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -82,10 +92,25 @@ while run:
     window.fill((135, 206, 235))
     player_group.update()
     player_group.draw(window)
-    
+
     pipe_group.draw(window)
     pygame.draw.rect(window, (34, 139, 34), (0, ground_y, 864, ground_height))
+
+    if len(pipe_group) > 0:
+        if player_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.left\
+         and player_group.sprites()[0].rect.right < pipe_group.sprites()[0].rect.right\
+        and pipe_pass == False:
+            pipe_pass = True
+        if pipe_pass == True:
+            if player_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
+                score += 1
+                pipe_pass = False
+
+    draw_text(str(score), font, white, int(width / 2), 20)
+    
+    
     pygame.display.update()
+
     
     if pygame.sprite.groupcollide(player_group, pipe_group, False, False) or Bird.rect.top < 0:
         over = True
