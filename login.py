@@ -127,4 +127,4 @@ if __name__ == "__main__":
     player = login_screen()
     if player:
         import game
-        game.start(player)
+        game.start(player, window, clock)
